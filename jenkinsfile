@@ -1,0 +1,41 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/gsaivarshini10/docker'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                bat 'docker build -t gsaivarshini10/myapp .'
+            }
+        }
+
+        stage('Login to Docker Hub') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'gsaivarshini10',
+                                                  usernameVariable: 'DOCKERHUB_USER',
+                                                  passwordVariable: 'DOCKERHUB_PASS')]) {
+                    bat '''
+                    echo %DOCKERHUB_PASS% | docker login -u %DOCKERHUB_USER% --password-stdin
+                    '''
+                }
+            }
+        }
+
+        stage('Push Image to Docker Hub') {
+            steps {
+                bat 'docker push gsaivarshini10/myapp'
+            }
+        }
+
+        stage('Cleanup') {
+            steps {
+                bat 'docker logout'
+            }
+        }
+    }
+}
